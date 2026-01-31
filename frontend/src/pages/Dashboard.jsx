@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Navbar from '../components/layout/Navbar';
+import inventoryService from '../services/inventoryService';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -17,17 +18,39 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Simulate fetching dashboard stats
-        // Replace with actual API call
-        setTimeout(() => {
-            setStats({
-                totalItems: 156,
-                lowStock: 12,
-                totalValue: 45280,
-                recentActivity: 8,
-            });
-            setLoading(false);
-        }, 1000);
+        const fetchDashboardStats = async () => {
+            try {
+                setLoading(true);
+                // Fetch all inventory items
+                const response = await inventoryService.getAllItems();
+                const items = response.data || [];
+
+                // Calculate stats from inventory
+                const totalItems = items.length;
+                const lowStock = items.filter(item => item.quantity < 10).length;
+                const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+                setStats({
+                    totalItems,
+                    lowStock,
+                    totalValue: Math.round(totalValue),
+                    recentActivity: items.length, // Could be enhanced with actual activity tracking
+                });
+            } catch (error) {
+                console.error('Failed to fetch dashboard stats:', error);
+                // Set default stats on error
+                setStats({
+                    totalItems: 0,
+                    lowStock: 0,
+                    totalValue: 0,
+                    recentActivity: 0,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardStats();
     }, []);
 
     if (loading) {

@@ -6,19 +6,8 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import LoadingSpinner, { Skeleton } from '../components/common/LoadingSpinner';
 import Navbar from '../components/layout/Navbar';
+import inventoryService from '../services/inventoryService';
 import './InventoryList.css';
-
-// Mock data for demonstration
-const MOCK_INVENTORY = [
-    { id: 1, name: 'Wireless Mouse', sku: 'TECH-001', category: 'Electronics', quantity: 45, price: 29.99, lowStock: false },
-    { id: 2, name: 'Mechanical Keyboard', sku: 'TECH-002', category: 'Electronics', quantity: 8, price: 89.99, lowStock: true },
-    { id: 3, name: 'Office Chair', sku: 'FURN-001', category: 'Furniture', quantity: 12, price: 199.99, lowStock: false },
-    { id: 4, name: 'Desk Lamp', sku: 'FURN-002', category: 'Furniture', quantity: 3, price: 34.99, lowStock: true },
-    { id: 5, name: 'Notebook Set', sku: 'STAT-001', category: 'Stationery', quantity: 125, price: 12.99, lowStock: false },
-    { id: 6, name: 'Pen Pack (24ct)', sku: 'STAT-002', category: 'Stationery', quantity: 67, price: 8.99, lowStock: false },
-    { id: 7, name: 'USB-C Cable', sku: 'TECH-003', category: 'Electronics', quantity: 5, price: 14.99, lowStock: true },
-    { id: 8, name: 'Monitor Stand', sku: 'FURN-003', category: 'Furniture', quantity: 18, price: 45.99, lowStock: false },
-];
 
 const InventoryList = () => {
     const navigate = useNavigate();
@@ -34,13 +23,27 @@ const InventoryList = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
 
-    // Load mock data
+    // Load inventory from backend
     useEffect(() => {
-        setTimeout(() => {
-            setInventory(MOCK_INVENTORY);
-            setFilteredInventory(MOCK_INVENTORY);
-            setLoading(false);
-        }, 800);
+        const loadInventory = async () => {
+            try {
+                setLoading(true);
+                const response = await inventoryService.getAllItems();
+                // Backend returns { success: true, data: [...items] }
+                const items = response.data || [];
+                setInventory(items);
+                setFilteredInventory(items);
+            } catch (error) {
+                console.error('Failed to load inventory:', error);
+                toast.error('Failed to load inventory items');
+                setInventory([]);
+                setFilteredInventory([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadInventory();
     }, []);
 
     // Filter and search
@@ -92,11 +95,22 @@ const InventoryList = () => {
         setDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
-        setInventory(inventory.filter(item => item.id !== itemToDelete.id));
-        toast.success(`${itemToDelete.name} deleted successfully`);
-        setDeleteModalOpen(false);
-        setItemToDelete(null);
+    const confirmDelete = async () => {
+        try {
+            // Call backend API to delete
+            await inventoryService.deleteItem(itemToDelete._id || itemToDelete.id);
+
+            // Remove from local state
+            setInventory(inventory.filter(item => (item._id || item.id) !== (itemToDelete._id || itemToDelete.id)));
+
+            toast.success(`${itemToDelete.name} deleted successfully`);
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
+        } catch (error) {
+            console.error('Delete failed:', error);
+            toast.error('Failed to delete item');
+            setDeleteModalOpen(false);
+        }
     };
 
     const getCategories = () => {

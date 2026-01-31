@@ -5,6 +5,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Navbar from '../components/layout/Navbar';
+import inventoryService from '../services/inventoryService';
 import './AddEditInventory.css';
 
 const AddEditInventory = () => {
@@ -27,21 +28,33 @@ const AddEditInventory = () => {
 
     // Load item data if in edit mode
     useEffect(() => {
-        if (isEditMode) {
-            setTimeout(() => {
-                // Mock data for demonstration
-                setFormData({
-                    name: 'Wireless Mouse',
-                    sku: 'TECH-001',
-                    category: 'Electronics',
-                    quantity: '45',
-                    price: '29.99',
-                    description: 'Ergonomic wireless mouse with USB receiver',
-                });
-                setLoadingItem(false);
-            }, 500);
-        }
-    }, [isEditMode]);
+        const loadItem = async () => {
+            if (isEditMode) {
+                try {
+                    setLoadingItem(true);
+                    const response = await inventoryService.getItemById(id);
+                    const item = response.data;
+
+                    setFormData({
+                        name: item.name || '',
+                        sku: item.sku || '',
+                        category: item.category || '',
+                        quantity: item.quantity?.toString() || '',
+                        price: item.price?.toString() || '',
+                        description: item.description || '',
+                    });
+                } catch (error) {
+                    console.error('Failed to load item:', error);
+                    toast.error('Failed to load item details');
+                    navigate('/inventory');
+                } finally {
+                    setLoadingItem(false);
+                }
+            }
+        };
+
+        loadItem();
+    }, [isEditMode, id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -93,15 +106,34 @@ const AddEditInventory = () => {
 
         setLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            // Prepare data for API
+            const itemData = {
+                name: formData.name.trim(),
+                sku: formData.sku.trim(),
+                category: formData.category.trim(),
+                quantity: parseInt(formData.quantity),
+                price: parseFloat(formData.price),
+                description: formData.description.trim(),
+            };
+
             if (isEditMode) {
+                // Update existing item
+                await inventoryService.updateItem(id, itemData);
                 toast.success('Item updated successfully!');
             } else {
+                // Create new item
+                await inventoryService.createItem(itemData);
                 toast.success('Item added successfully!');
             }
+
             navigate('/inventory');
-        }, 1000);
+        } catch (error) {
+            console.error('Submit failed:', error);
+            toast.error(error || `Failed to ${isEditMode ? 'update' : 'add'} item`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCancel = () => {

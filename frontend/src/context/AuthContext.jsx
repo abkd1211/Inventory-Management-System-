@@ -47,23 +47,8 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             return data;
         } catch (error) {
-            // If backend fails, use mock authentication for testing
-            console.warn('Backend unavailable, using mock auth for: ' + email);
-            const mockUser = {
-                id: '1',
-                name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
-                email: email,
-            };
-            const mockToken = 'mock-token-' + Date.now();
-
-            // Store mock data
-            localStorage.setItem('token', mockToken);
-            localStorage.setItem('user', JSON.stringify(mockUser));
-
-            setUser(mockUser);
-            setIsAuthenticated(true);
-
-            return { user: mockUser, token: mockToken };
+            console.error('Login failed:', error);
+            throw error;
         }
     };
 
@@ -74,22 +59,8 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             return data;
         } catch (error) {
-            // Mock registration for testing
-            console.warn('Backend unavailable, using mock registration');
-            const mockUser = {
-                id: '1',
-                name: userData.name,
-                email: userData.email,
-            };
-            const mockToken = 'mock-token-' + Date.now();
-
-            localStorage.setItem('token', mockToken);
-            localStorage.setItem('user', JSON.stringify(mockUser));
-
-            setUser(mockUser);
-            setIsAuthenticated(true);
-
-            return { user: mockUser, token: mockToken };
+            console.error('Registration failed:', error);
+            throw error;
         }
     };
 
