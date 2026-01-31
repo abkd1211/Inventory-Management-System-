@@ -7,9 +7,25 @@ const inventoryRoutes = require("./routes/inventoryRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 // Middleware
+// Allow both localhost (for development) and deployed frontend URLs
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL, // You'll set this when deploying
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, Postman, or same-origin)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
