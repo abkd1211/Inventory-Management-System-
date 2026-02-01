@@ -33,7 +33,13 @@ const AddEditInventory = () => {
                 try {
                     setLoadingItem(true);
                     const response = await inventoryService.getItemById(id);
-                    const item = response.data;
+                    // Backend returns { success: true, data: {...item} }
+                    const item = response.data || response;
+
+                    // Ensure item exists before trying to access properties
+                    if (!item) {
+                        throw new Error('Item not found');
+                    }
 
                     setFormData({
                         name: item.name || '',
