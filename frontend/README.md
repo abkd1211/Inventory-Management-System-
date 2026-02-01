@@ -1,6 +1,14 @@
 # Inventory Management System - Frontend
 
-A modern, responsive inventory management system built with React and Vite, featuring a stunning glassmorphism UI with emerald/teal gradients.
+A modern, responsive inventory management system built with React and Vite, featuring a stunning glassmorphism UI design.
+
+## 🌐 Live Demo
+
+**Production URL:** [https://inventory-management-system-sigma-ten.vercel.app](https://inventory-management-system-sigma-ten.vercel.app)
+
+**Status:** ✅ Fully Deployed and Operational
+
+> 📖 For comprehensive documentation, see [FRONTEND_DOCUMENTATION.md](./FRONTEND_DOCUMENTATION.md)
 
 ## 🚀 Features
 
@@ -106,14 +114,23 @@ src/
 
 ## 🌐 API Configuration
 
-The app is configured to work with or without a backend:
+The app connects to the backend API:
 
-1. **With Backend**: Update the API URL in `.env`:
+**Production Backend:** `https://inventory-management-system-ax8a.onrender.com/api`
+
+### Environment Variables
+
+1. **Production** (on Vercel):
    ```
-   VITE_API_URL=http://your-backend-url/api
+   VITE_API_URL=https://inventory-management-system-ax8a.onrender.com/api
    ```
 
-2. **Without Backend** (Mock Mode): The app automatically falls back to mock authentication and data when the backend is unavailable. Simply use any email/password to login.
+2. **Local Development** (`.env` file):
+   ```
+   VITE_API_URL=http://localhost:5000/api
+   ```
+
+The app will display appropriate error messages if the backend is unavailable.
 
 ## 📱 Responsive Breakpoints
 
@@ -168,13 +185,28 @@ Edit the CSS custom properties in `src/styles/globals.css`:
 2. Add route in `src/App.jsx`
 3. Update navigation in `src/components/layout/Navbar.jsx`
 
-## 🔐 Mock Authentication
+## 🌐 Deployment
 
-For testing without a backend:
-- **Email**: Use any email format (e.g., `test@example.com`)
-- **Password**: Use any password (min 6 characters)
+**Platform:** Vercel  
+**Backend:** Render  
+**Status:** Production Ready
 
-The app will create a mock session and allow you to explore all features.
+### Deployment URLs
+- **Frontend:** https://inventory-management-system-sigma-ten.vercel.app
+- **Backend API:** https://inventory-management-system-ax8a.onrender.com/api
+
+### Build Configuration
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Node Version:** 18.x
+
+For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)
+
+## 📚 Documentation
+
+- **Frontend Documentation:** [FRONTEND_DOCUMENTATION.md](./FRONTEND_DOCUMENTATION.md) - Comprehensive technical documentation
+- **API Documentation:** [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) - Backend API reference
+- **Deployment Guide:** [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) - Deployment checklist and instructions
 
 ## 📄 License
 
@@ -182,4 +214,10 @@ This project is created for educational purposes.
 
 ## 👨‍💻 Author
 
-Created as part of a MERN Stack Inventory Management System lab project.
+Created as part of a university MERN Stack Inventory Management System project.
+
+---
+
+**Last Updated:** February 1, 2026  
+**Version:** 1.0.0  
+**Status:** ✅ Production
