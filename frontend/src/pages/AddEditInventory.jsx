@@ -32,18 +32,34 @@ const AddEditInventory = () => {
             if (isEditMode) {
                 try {
                     setLoadingItem(true);
+                    console.log('Loading item with ID:', id); // Debug log
+
                     const response = await inventoryService.getItemById(id);
+                    console.log('Full response:', response); // Debug log
 
                     // Backend returns: { success: true, data: {...item} }
-                    // So response.data is { success: true, data: {...} }
-                    // And the actual item is response.data.data
-                    const item = response.data?.data || response.data || response;
+                    // The inventoryService returns response.data, which is { success: true, data: {...} }
+                    // So the actual item is in response.data
+                    let item;
 
-                    console.log('Loaded item for editing:', item); // Debug log
+                    if (response.data) {
+                        item = response.data;
+                    } else if (response.success && response.data) {
+                        item = response.data;
+                    } else {
+                        item = response;
+                    }
+
+                    console.log('Parsed item for editing:', item); // Debug log
 
                     // Ensure item exists and has required properties
-                    if (!item || !item.name) {
-                        throw new Error('Item not found or invalid data');
+                    if (!item) {
+                        throw new Error('Item not found - response was empty');
+                    }
+
+                    if (!item.name) {
+                        console.error('Item missing name property. Full item:', item);
+                        throw new Error('Item data is invalid - missing required fields');
                     }
 
                     setFormData({
@@ -56,7 +72,12 @@ const AddEditInventory = () => {
                     });
                 } catch (error) {
                     console.error('Failed to load item:', error);
-                    toast.error('Failed to load item details');
+                    console.error('Error details:', {
+                        message: error.message,
+                        response: error.response,
+                        stack: error.stack
+                    });
+                    toast.error(`Failed to load item: ${error.message || error}`);
                     navigate('/inventory');
                 } finally {
                     setLoadingItem(false);

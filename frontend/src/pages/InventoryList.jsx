@@ -238,7 +238,7 @@ const InventoryList = () => {
                                     </thead>
                                     <tbody>
                                         {filteredInventory.map(item => (
-                                            <tr key={item.id}>
+                                            <tr key={item._id}>
                                                 <td className="item-name">{item.name}</td>
                                                 <td className="item-sku">{item.sku}</td>
                                                 <td>
@@ -255,7 +255,7 @@ const InventoryList = () => {
                                                     <div className="action-buttons">
                                                         <button
                                                             className="action-btn action-btn-edit"
-                                                            onClick={() => navigate(`/inventory/edit/${item.id}`)}
+                                                            onClick={() => navigate(`/inventory/edit/${item._id}`)}
                                                             title="Edit"
                                                         >
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -284,7 +284,7 @@ const InventoryList = () => {
                             {/* Mobile Card View */}
                             <div className="inventory-cards">
                                 {filteredInventory.map(item => (
-                                    <Card key={item.id} className="inventory-card" hover>
+                                    <Card key={item._id} className="inventory-card" hover>
                                         <div className="card-header-row">
                                             <div>
                                                 <h3 className="card-item-name">{item.name}</h3>
@@ -314,7 +314,7 @@ const InventoryList = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => navigate(`/inventory/edit/${item.id}`)}
+                                                onClick={() => navigate(`/inventory/edit/${item._id}`)}
                                             >
                                                 Edit
                                             </Button>
