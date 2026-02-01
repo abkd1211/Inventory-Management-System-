@@ -7,6 +7,7 @@ import Input from '../components/common/Input';
 import LoadingSpinner, { Skeleton } from '../components/common/LoadingSpinner';
 import Navbar from '../components/layout/Navbar';
 import inventoryService from '../services/inventoryService';
+import { exportToCSV, exportToJSON, exportToHTML } from '../utils/exportUtils';
 import './InventoryList.css';
 
 const InventoryList = () => {
@@ -22,6 +23,7 @@ const InventoryList = () => {
     const [sortOrder, setSortOrder] = useState('asc');
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
     // Load inventory from backend
     useEffect(() => {
@@ -29,21 +31,10 @@ const InventoryList = () => {
             try {
                 setLoading(true);
                 const response = await inventoryService.getAllItems();
-                console.log('Full inventory response:', response); // Debug log
 
                 // Backend returns { success: true, count: X, data: [...items] }
                 // inventoryService returns response.data, so we get { success: true, data: [...] }
-                // The actual items array is in response.data or response.data.data
                 const items = response.data?.data || response.data || [];
-
-                console.log('Parsed items:', items); // Debug log
-                console.log('Is items an array?', Array.isArray(items)); // Debug log
-                console.log('Items length:', items.length); // Debug log
-                if (items.length > 0) {
-                    console.log('First item structure:', items[0]); // Debug log
-                    console.log('First item _id:', items[0]?._id); // Debug log
-                    console.log('First item id:', items[0]?.id); // Debug log
-                }
 
                 setInventory(items);
                 setFilteredInventory(items);
@@ -143,6 +134,45 @@ const InventoryList = () => {
         }
     };
 
+    const handleExport = (format) => {
+        if (filteredInventory.length === 0) {
+            toast.error('No data to export!');
+            return;
+        }
+
+        try {
+            const date = new Date().toISOString().split('T')[0];
+
+            switch (format) {
+                case 'csv':
+                    exportToCSV(filteredInventory, `inventory-${date}.csv`);
+                    toast.success('Data exported to CSV successfully!');
+                    break;
+                case 'json':
+                    exportToJSON(filteredInventory, `inventory-${date}.json`);
+                    toast.success('Data exported to JSON successfully!');
+                    break;
+                case 'html':
+                    const stats = {
+                        totalItems: filteredInventory.length,
+                        lowStock: filteredInventory.filter(i => i.quantity < 10).length,
+                        totalValue: filteredInventory.reduce((sum, i) => sum + (i.price * i.quantity), 0)
+                    };
+                    exportToHTML(filteredInventory, stats);
+                    toast.success('Report exported to HTML successfully!');
+                    break;
+                default:
+                    toast.error('Invalid export format');
+            }
+
+            setExportMenuOpen(false);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export data');
+        }
+    };
+
+
     if (loading) {
         return (
             <>
@@ -168,16 +198,39 @@ const InventoryList = () => {
                             <h1 className="inventory-title">Inventory</h1>
                             <p className="inventory-subtitle">{filteredInventory.length} items total</p>
                         </div>
-                        <Link to="/inventory/add">
-                            <Button variant="primary" size="md">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="16" />
-                                    <line x1="8" y1="12" x2="16" y2="12" />
-                                </svg>
-                                Add Item
-                            </Button>
-                        </Link>
+                        <div className="inventory-header-actions">
+                            <div className="export-button-wrapper">
+                                <Button
+                                    variant="ghost"
+                                    size="md"
+                                    onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="7 10 12 15 17 10" />
+                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                    Export
+                                </Button>
+                                {exportMenuOpen && (
+                                    <div className="export-dropdown-inventory" onClick={(e) => e.stopPropagation()}>
+                                        <button onClick={() => handleExport('csv')}>Export as CSV</button>
+                                        <button onClick={() => handleExport('json')}>Export as JSON</button>
+                                        <button onClick={() => handleExport('html')}>Export as HTML</button>
+                                    </div>
+                                )}
+                            </div>
+                            <Link to="/inventory/add">
+                                <Button variant="primary" size="md">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="8" x2="12" y2="16" />
+                                        <line x1="8" y1="12" x2="16" y2="12" />
+                                    </svg>
+                                    Add Item
+                                </Button>
+                            </Link>
+                        </div>
                     </header>
 
                     <Card className="filters-card">

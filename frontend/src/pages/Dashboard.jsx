@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/common/Toast';
 import Card from '../components/common/Card';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Navbar from '../components/layout/Navbar';
+import InventoryChart from '../components/charts/InventoryChart';
 import inventoryService from '../services/inventoryService';
+import { exportToCSV, exportToJSON, exportToHTML } from '../utils/exportUtils';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -15,7 +18,10 @@ const Dashboard = () => {
         totalValue: 0,
         recentActivity: 0,
     });
+    const [items, setItems] = useState([]); // Store items for export and chart
     const [loading, setLoading] = useState(true);
+    const [exportMenuOpen, setExportMenuOpen] = useState(false);
+    const toast = useToast();
 
     useEffect(() => {
         const fetchDashboardStats = async () => {
@@ -23,18 +29,19 @@ const Dashboard = () => {
                 setLoading(true);
                 // Fetch all inventory items
                 const response = await inventoryService.getAllItems();
-                const items = response.data || [];
+                const fetchedItems = response.data?.data || response.data || [];
 
                 // Calculate stats from inventory
-                const totalItems = items.length;
-                const lowStock = items.filter(item => item.quantity < 10).length;
-                const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const totalItems = fetchedItems.length;
+                const lowStock = fetchedItems.filter(item => item.quantity < 10).length;
+                const totalValue = fetchedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+                setItems(fetchedItems); // Store for chart and export
                 setStats({
                     totalItems,
                     lowStock,
                     totalValue: Math.round(totalValue),
-                    recentActivity: items.length, // Could be enhanced with actual activity tracking
+                    recentActivity: fetchedItems.length, // Could be enhanced with actual activity tracking
                 });
             } catch (error) {
                 console.error('Failed to fetch dashboard stats:', error);
@@ -52,6 +59,39 @@ const Dashboard = () => {
 
         fetchDashboardStats();
     }, []);
+
+    const handleExport = (format) => {
+        if (items.length === 0) {
+            toast.error('No data to export!');
+            return;
+        }
+
+        try {
+            const date = new Date().toISOString().split('T')[0];
+
+            switch (format) {
+                case 'csv':
+                    exportToCSV(items, `inventory-${date}.csv`);
+                    toast.success('Data exported to CSV successfully!');
+                    break;
+                case 'json':
+                    exportToJSON(items, `inventory-${date}.json`);
+                    toast.success('Data exported to JSON successfully!');
+                    break;
+                case 'html':
+                    exportToHTML(items, stats);
+                    toast.success('Report exported to HTML successfully!');
+                    break;
+                default:
+                    toast.error('Invalid export format');
+            }
+
+            setExportMenuOpen(false);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export data');
+        }
+    };
 
     if (loading) {
         return (
@@ -170,27 +210,29 @@ const Dashboard = () => {
                                     </svg>
                                     <span>Add New Item</span>
                                 </Link>
-                                <button className="quick-action">
+                                <button
+                                    className="quick-action"
+                                    onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                                >
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                         <polyline points="7 10 12 15 17 10" />
                                         <line x1="12" y1="15" x2="12" y2="3" />
                                     </svg>
                                     <span>Export Data</span>
+                                    {exportMenuOpen && (
+                                        <div className="export-dropdown" onClick={(e) => e.stopPropagation()}>
+                                            <button onClick={() => handleExport('csv')}>Export as CSV</button>
+                                            <button onClick={() => handleExport('json')}>Export as JSON</button>
+                                            <button onClick={() => handleExport('html')}>Export as HTML</button>
+                                        </div>
+                                    )}
                                 </button>
                             </div>
                         </Card>
 
                         <Card title="Inventory Overview" className="overview-card">
-                            <div className="overview-placeholder">
-                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <line x1="18" y1="20" x2="18" y2="10" />
-                                    <line x1="12" y1="20" x2="12" y2="4" />
-                                    <line x1="6" y1="20" x2="6" y2="14" />
-                                </svg>
-                                <p>Chart visualization will appear here</p>
-                                <span className="text-tertiary">Connect your data to see insights</span>
-                            </div>
+                            <InventoryChart items={items} />
                         </Card>
                     </div>
                 </div>
