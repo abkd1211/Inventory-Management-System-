@@ -33,20 +33,25 @@ const AddEditInventory = () => {
                 try {
                     setLoadingItem(true);
                     const response = await inventoryService.getItemById(id);
-                    // Backend returns { success: true, data: {...item} }
-                    const item = response.data || response;
 
-                    // Ensure item exists before trying to access properties
-                    if (!item) {
-                        throw new Error('Item not found');
+                    // Backend returns: { success: true, data: {...item} }
+                    // So response.data is { success: true, data: {...} }
+                    // And the actual item is response.data.data
+                    const item = response.data?.data || response.data || response;
+
+                    console.log('Loaded item for editing:', item); // Debug log
+
+                    // Ensure item exists and has required properties
+                    if (!item || !item.name) {
+                        throw new Error('Item not found or invalid data');
                     }
 
                     setFormData({
                         name: item.name || '',
                         sku: item.sku || '',
                         category: item.category || '',
-                        quantity: item.quantity?.toString() || '',
-                        price: item.price?.toString() || '',
+                        quantity: item.quantity !== undefined ? item.quantity.toString() : '',
+                        price: item.price !== undefined ? item.price.toString() : '',
                         description: item.description || '',
                     });
                 } catch (error) {

@@ -35,8 +35,9 @@ const inventorySchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, "Please add a description"],
+      required: false,
       trim: true,
+      default: '', // Default to empty string if not provided
     },
   },
   {

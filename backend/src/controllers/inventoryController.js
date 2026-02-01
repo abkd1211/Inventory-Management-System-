@@ -5,10 +5,10 @@ const Inventory = require("../models/Inventory");
 const createInventory = async (req, res) => {
   const { name, sku, category, quantity, price, description } = req.body;
 
-  // Validation
-  if (!name || !sku || !category || !quantity || !price || !description) {
+  // Validation (description is optional)
+  if (!name || !sku || !category || quantity === undefined || !price) {
     res.status(400);
-    throw new Error("Please fill in all fields");
+    throw new Error("Please fill in all required fields");
   }
 
   // Create new product
@@ -23,9 +23,9 @@ const createInventory = async (req, res) => {
   });
 
   res.status(201).json({
-      success: true,
-      message: "Item created successfully",
-      data: inventory 
+    success: true,
+    message: "Item created successfully",
+    data: inventory
   });
 };
 
@@ -34,11 +34,11 @@ const createInventory = async (req, res) => {
 const getInventory = async (req, res) => {
   // Only find items that belong to the current user
   const inventory = await Inventory.find({ user: req.user.id }).sort("-createdAt");
-  
+
   res.status(200).json({
-      success: true,
-      count: inventory.length,
-      data: inventory 
+    success: true,
+    count: inventory.length,
+    data: inventory
   });
 };
 
@@ -60,8 +60,8 @@ const getInventoryItem = async (req, res) => {
   }
 
   res.status(200).json({
-      success: true,
-      data: inventory 
+    success: true,
+    data: inventory
   });
 };
 
@@ -122,9 +122,9 @@ const updateInventory = async (req, res) => {
   );
 
   res.status(200).json({
-      success: true,
-      message: "Item updated successfully",
-      data: updatedInventory 
+    success: true,
+    message: "Item updated successfully",
+    data: updatedInventory
   });
 };
 
