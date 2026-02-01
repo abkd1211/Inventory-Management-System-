@@ -29,8 +29,22 @@ const InventoryList = () => {
             try {
                 setLoading(true);
                 const response = await inventoryService.getAllItems();
-                // Backend returns { success: true, data: [...items] }
-                const items = response.data || [];
+                console.log('Full inventory response:', response); // Debug log
+
+                // Backend returns { success: true, count: X, data: [...items] }
+                // inventoryService returns response.data, so we get { success: true, data: [...] }
+                // The actual items array is in response.data or response.data.data
+                const items = response.data?.data || response.data || [];
+
+                console.log('Parsed items:', items); // Debug log
+                console.log('Is items an array?', Array.isArray(items)); // Debug log
+                console.log('Items length:', items.length); // Debug log
+                if (items.length > 0) {
+                    console.log('First item structure:', items[0]); // Debug log
+                    console.log('First item _id:', items[0]?._id); // Debug log
+                    console.log('First item id:', items[0]?.id); // Debug log
+                }
+
                 setInventory(items);
                 setFilteredInventory(items);
             } catch (error) {
@@ -101,7 +115,8 @@ const InventoryList = () => {
             await inventoryService.deleteItem(itemToDelete._id || itemToDelete.id);
 
             // Remove from local state
-            setInventory(inventory.filter(item => (item._id || item.id) !== (itemToDelete._id || itemToDelete.id)));
+            const deletedId = itemToDelete.id || itemToDelete._id;
+            setInventory(inventory.filter(item => (item.id || item._id) !== deletedId));
 
             toast.success(`${itemToDelete.name} deleted successfully`);
             setDeleteModalOpen(false);
@@ -238,7 +253,7 @@ const InventoryList = () => {
                                     </thead>
                                     <tbody>
                                         {filteredInventory.map(item => (
-                                            <tr key={item._id}>
+                                            <tr key={item.id || item._id}>
                                                 <td className="item-name">{item.name}</td>
                                                 <td className="item-sku">{item.sku}</td>
                                                 <td>
@@ -255,7 +270,7 @@ const InventoryList = () => {
                                                     <div className="action-buttons">
                                                         <button
                                                             className="action-btn action-btn-edit"
-                                                            onClick={() => navigate(`/inventory/edit/${item._id}`)}
+                                                            onClick={() => navigate(`/inventory/edit/${item.id || item._id}`)}
                                                             title="Edit"
                                                         >
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -284,7 +299,7 @@ const InventoryList = () => {
                             {/* Mobile Card View */}
                             <div className="inventory-cards">
                                 {filteredInventory.map(item => (
-                                    <Card key={item._id} className="inventory-card" hover>
+                                    <Card key={item.id || item._id} className="inventory-card" hover>
                                         <div className="card-header-row">
                                             <div>
                                                 <h3 className="card-item-name">{item.name}</h3>
@@ -314,7 +329,7 @@ const InventoryList = () => {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => navigate(`/inventory/edit/${item._id}`)}
+                                                onClick={() => navigate(`/inventory/edit/${item.id || item._id}`)}
                                             >
                                                 Edit
                                             </Button>
